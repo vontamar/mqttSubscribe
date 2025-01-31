@@ -10,11 +10,13 @@ import org.bouncycastle.openssl.PEMParser;
 
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.springframework.core.io.ClassPathResource;
 
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.SSLContext;
+import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.security.KeyStore;
@@ -25,21 +27,21 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.SecureRandom;
 import java.io.IOException;
+import java.util.Properties;
 
 @Configuration
 public class MqttConfig {
 
-    @Value("${mqtt.aws.mqttURL}")
-    private String mqttURL;
+    @Value("${mqtt.aws.mqttBrokerInfo}")
+    private String mqttBrokerInfo;
 
-    @Value("${mqtt.aws.mqttPort}")
-    private int mqttPort;
+    private String mqttURL = "";
 
-    @Value("${mqtt.aws.mqttKey}")
-    private String mqttKey;
+    private String mqttPort = "";
 
-    @Value("${mqtt.aws.mqttClientId}")
-    private String mqttClientId;
+    private String mqttKey = "";
+
+    private String mqttClientId = "";
 
     @Value("${mqtt.aws.mqttCertCa}")
     private String mqttCertCa;
@@ -52,6 +54,19 @@ public class MqttConfig {
 
     @Bean
     public MqttClient mqttClient() throws Exception {
+        ClassPathResource resource = new ClassPathResource(mqttBrokerInfo);
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(resource.getInputStream()))) {
+            // If using key=value format, load into Properties
+            Properties props = new Properties();
+            props.load(reader);
+
+            mqttURL = props.getProperty("url");
+            mqttPort = props.getProperty("port");
+            mqttKey = props.getProperty("key");
+            mqttClientId = props.getProperty("clientid");
+        }
+
         String mqttBrokerUrl = "ssl://" + mqttURL + ":" + mqttPort;
         MqttClient mqttClient = new MqttClient(mqttBrokerUrl, mqttClientId, new MemoryPersistence());
 
