@@ -18,7 +18,7 @@ public class MqttReceiverController {
     // HTTP endpoint to trigger MQTT subscription
     @GetMapping("/subscribe")
     public String subscribeToTopic(@RequestParam("topic") String topic) {
-        mqttSubService.subscribeToTopic("properties/15/+/Locomotive/+");
+        mqttSubService.subscribeToTopic("properties/**/+/****/+");
         return "Subscribed to topic: " + topic;
     }
 }
